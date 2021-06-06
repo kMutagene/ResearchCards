@@ -1,4 +1,4 @@
-module src.App
+module ResearchCards.App
 
 open System
 open System.IO
