@@ -2,6 +2,7 @@
 
 open FSharp.Data
 open System.Text.Json
+open System.Text.Json.Serialization
 
 module ResponseTypes =
  
@@ -23,16 +24,40 @@ module ResponseTypes =
                     EmbeddedResource="ResearchCards.App, ResearchCards.App.data.schemas.work-3.0.xsd",
                     ResolutionFolder = resolutionPath>
 
-    type Authentication =
+    type AuthenticationToken =
         {
-            "access_token":"4bed1e13-7792-4129-9f07-aaf7b88ba88f",
-            "token_type":"bearer",
-            "refresh_token":"2d76d8d0-6fd6-426b-a017-61e0ceda0ad2",
-            "expires_in":631138518,
-            "scope":"/read-public",
-            "orcid":null}
+            [<JsonPropertyName("access_token")>]
+            AccessToken: string
+            [<JsonPropertyName("token_type")>]
+            TokenType: string
+            [<JsonPropertyName("refresh_token")>]
+            RefreshToken: string
+            [<JsonPropertyName("expires_in")>]
+            EpiresIn: int64
+            [<JsonPropertyName("scope")>]
+            scope: string
+            [<JsonPropertyName("orcid")>]
+            Orcid: string option
         }
 
 module Requests =
     
-    let getAccessToken = raise new System.NotImplementedException()
+    let getAccessToken clientId clientSecret : ResponseTypes.AuthenticationToken =
+
+        Http.RequestString(
+            url = "https://orcid.org/oauth/token",
+            httpMethod = "POST",
+            headers = [
+                "Accept", "application/json"
+                "Content-Type", HttpContentTypes.FormValues
+            ],
+            body = 
+                HttpRequestBody.FormValues [
+                    "client_id", clientId
+                    "client_secret", clientSecret
+                    "grant_type", "client_credentials"
+                    "scope", "/read-public"
+                ]
+        )
+
+        |> JsonSerializer.Deserialize<ResponseTypes.AuthenticationToken>
